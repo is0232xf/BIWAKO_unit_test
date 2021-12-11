@@ -66,6 +66,7 @@ def input_power():
         else:
             return input_value
 
+# add logging function
 def logging(arg1, args2):
     v = power_sensor.get_voltage()
     c = power_sensor.get_current()
