@@ -14,6 +14,7 @@ power_sensor.initial_operation()
 arduino = 0x04
 i2cbus = SMBus(1)
 log_data = []
+is_first = 0
 
 frequency = 100 # [Hz]
 interval = 1/frequency # [s]
@@ -97,36 +98,28 @@ csvWriter.writerow(data_items)
 signal.signal(signal.SIGALRM, logging)
 signal.setitimer(signal.ITIMER_REAL, 0.01, interval)
 
-strength1 = int(input_power())
-strength2 = int(input_power())
-strength = strength1
-st = time.perf_counter()
-ed = 0.0
-is_first = 0
 # main loop
 while True:
     try:
-        mode_value = 2
-        cmd = [1, strength]
+        mode_value = int(input_mode())
+        if mode_value == 0 or mode_value == 1 or mode_value == 3:
+            cmd = [0, 0]
+        if mode_value == 2:
+            cmd = [performance_value, power_value]
+            i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+            performance_value = int(input_performance_number())
+            if 1 <= performance_value <= 6:
+                power_value = int(input_power())
+            elif performance_value == 0:
+                power_value = 0
+            cmd = [performance_value, power_value]
         i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
-        time.sleep(0.1)
-        """
-        
-        ed = time.perf_counter()
-        if ed - st > 5.0 and is_first==0:
-            st = time.perf_counter()
-            ed = 0.0
-            strength = strength2
-            is_first = 1
-        if ed - st > 5.0 and is_first==1:
-            strength = 0
-            cmd = [1, strength]
+        if mode_value == 3:
+            cmd = [0, 0]
             i2cbus.write_i2c_block_data(arduino, 0, cmd)
-            for i in range(len(log_data)):
-                csvWriter.writerow(log_data[i])
-            file.close()
+            break
+        time.sleep(0.1)
 
-        """
     except KeyboardInterrupt:
         for i in range(len(log_data)):
             csvWriter.writerow(log_data[i])
