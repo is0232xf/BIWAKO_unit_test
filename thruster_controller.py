@@ -34,17 +34,24 @@ def input_mode():
 def input_performance_number():
     while True:
         print("Please input robot performance number")
-        print("0:Stop, 1: Forward, 2: Backward, 3: Left, 4: Right, 5:CW, 6: CCW")
+        print("4 thrusters drive mode")
+        print("0:Stop, 1: Positive, 2: Negative, 3: Left, 4: Right, 5:CW, 6: CCW")
+        print("Diagonal drive mode")
+        print("7: First quadrant, 8: Second quadrant, 9: Third quadrant, 10: Forth quadrant")
+        print("2 thrusters drive mode (Push)")
+        print("11: Positive, 12: Negative, 13: Left, 14: Right")
+        print("2 thrusters drive mode (Pull)")
+        print("15: Positive, 16: Negative, 17: Left, 18: Right")
         input_value = int(input())
-        if input_value < 0 or input_value > 6:
+        if input_value < 0 or input_value > 18:
             print("Invalid number. Input again")
         else:
             if input_value == 0:
                 print("Stop")
             elif input_value == 1:
-                print("Forward")
+                print("Positive")
             elif input_value == 2:
-                print("Backward")
+                print("Negative")
             elif input_value == 3:
                 print("Left")
             elif input_value == 4:
