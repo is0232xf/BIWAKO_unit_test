@@ -9,6 +9,9 @@ __pycache__/
 # ignore result data(csv, jpg) filess
 *.csv
 
+# ignore arduino code
+arduino_code/
+
 # Distribution / packaging
 .Python
 build/
