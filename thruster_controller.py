@@ -116,7 +116,7 @@ while True:
             cmd = [performance_value, power_value]
             i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
             performance_value = int(input_performance_number())
-            if 1 <= performance_value <= 6:
+            if 1 <= performance_value <= 18:
                 power_value = int(input_power())
             elif performance_value == 0:
                 power_value = 0
@@ -124,8 +124,12 @@ while True:
         i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
         if mode_value == 3:
             cmd = [0, 0]
+            for i in range(len(log_data)):
+                csvWriter.writerow(log_data[i])
+            file.close()
+            cmd = [0, 0]
             i2cbus.write_i2c_block_data(arduino, 0, cmd)
-            break
+            time.sleep(1)
         time.sleep(0.1)
 
     except KeyboardInterrupt:
