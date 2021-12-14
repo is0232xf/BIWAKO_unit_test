@@ -36,7 +36,6 @@ font_dict = dict(style="italic",
 bbox_dict = dict(facecolor="#ffffff",
                  edgecolor="#000000",
                  fill=True)
-plt.text(2
-+.5, 9, text_avg_const_value, font_dict, bbox=bbox_dict)
+plt.text(2.5, 9, text_avg_const_value, font_dict, bbox=bbox_dict)
 plt.grid()
 plt.show()
