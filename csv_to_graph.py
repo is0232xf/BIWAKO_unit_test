@@ -76,17 +76,17 @@ def make_result_file(path):
     f.close()
 if __name__ == "__main__":
     # import csv format file
-    """
     # useage: make a time series of power consumption graph
-        path = "test.csv"
-        csv_to_graph(path)
+    path = "test.csv"
+    csv_to_graph(path)
+    
     """
-
     # useage: make result files
     path = 'C:/Users/is0232xf/OneDrive - 学校法人立命館/ソースコード/BIWAKO_unit_test/csv/diagonal/'
     files = os.listdir(path)
+    # get subdirectory list
     files_dir = [f for f in files if os.path.isdir(os.path.join(path, f))]
-    print(files_dir)
     for subdir in files_dir:
         dir = path + subdir + '/'
         make_result_file(dir)
+    """
