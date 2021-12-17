@@ -136,3 +136,4 @@ while True:
         time.sleep(1)
         signal.signal(signal.SIGALRM, kill_signal_process)
         signal.setitimer(signal.ITIMER_REAL, 0.1, 0.1)
+        break

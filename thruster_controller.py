@@ -1,3 +1,4 @@
+import os
 import csv
 import signal
 import math
@@ -23,9 +24,9 @@ interval = 1/frequency # [s]
 def input_mode():
     while True:
         print("Please select a control mode")
-        print("0: RC mode, 1: Auto mode, 2: Manual mode, 3: END")
+        print("0: RC mode, 1: Auto mode, 2: Manual mode, 3: END, 4: Time")
         input_value = int(input())
-        if input_value < 0 or input_value > 3:
+        if input_value < 0 or input_value > 4:
             print("Invalid value. Input again")
         else:
             return input_value
@@ -42,7 +43,7 @@ def input_performance_number():
         print("11: Positive, 12: Negative, 13: Left, 14: Right")
         print("2 thrusters drive mode (Pull)")
         print("15: Positive, 16: Negative, 17: Left, 18: Right")
-        input_value = int(input())
+        input_value = int(input("Command: "))
         if input_value < 0 or input_value > 18:
             print("Invalid number. Input again")
         else:
@@ -67,7 +68,7 @@ def input_power():
     while True:
         print("Please input thruster power")
         print("0 - 100 [%]")
-        input_value = int(input())
+        input_value = int(input("Power: "))
         if input_value < 0.0 or input_value > 100.0:
             print("Invalid value. Input again")
         else:
@@ -85,23 +86,84 @@ def logging(arg1, args2):
             BIWAKO.cmd, BIWAKO.pwm, v, c, p, kJ, BIWAKO.consumed_energy, BIWAKO.diff_distance]
     log_data.append(data)
 
+def time_count_control(action, power1, power2):
+    exp_time = 5.0
+    diff = 0.0
+    power = power1
+    st = time.perf_counter()
+    ed = 0.0
+    is_first = 0
+    mode_value = 2
+    cmd = [action, power]
+    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+    while True:
+        try:
+            ed = time.perf_counter()
+            if diff > exp_time and is_first==0:
+                print(diff)
+                st = time.perf_counter()
+                ed = time.perf_counter()
+                power = power2
+                cmd = [action, power]
+                i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+                is_first = 1
+            diff = ed - st
+            if diff > exp_time and is_first==1:
+                print(diff)
+                power = 0
+                cmd = [0, power]
+                i2cbus.write_i2c_block_data(arduino, 0, cmd)
+                csv_file_write()
+                break
+        except KeyboardInterrupt:
+            cmd = [0, 0]
+            i2cbus.write_i2c_block_data(arduino, 0, cmd)
+            break
+
+# get date time object
+def csv_file_make():
+    detail = datetime.datetime.now()
+    date = detail.strftime("%Y%m%d%H%M%S")
+    # open csv file
+    file_name = './csv/'+ date +'.csv'
+    file = open(file_name, 'a', newline='')
+    csvWriter = csv.writer(file)
+    data_items = ['count', 'latitude', 'longitude', 'yaw', 'cmd',
+                    'pwm', 'voltage', 'current', 'power_consumption', 'kJ_poewr_consumption', 'accum_power_consumption', 'distance']
+    csvWriter.writerow(data_items)
+    return file_name, file
+
+def csv_file_write():
+    detail = datetime.datetime.now()
+    date = detail.strftime("%Y%m%d%H%M%S")
+    # open csv file
+    file_name = './csv/'+ date +'.csv'
+    file = open(file_name, 'a', newline='')
+    csvWriter = csv.writer(file)
+    data_items = ['count', 'latitude', 'longitude', 'yaw', 'cmd',
+                    'pwm', 'voltage', 'current', 'power_consumption', 'kJ_poewr_consumption', 'accum_power_consumption', 'distance']
+    csvWriter.writerow(data_items)
+    if os.path.isfile(file_name):
+        for i in range(len(log_data)):
+            csvWriter.writerow(log_data[i])
+        file.close()
+
+
 def kill_signal_process(arg1, args2):
     pass
 
 # init the variables value
 mode_value = 0
-performance_value = 0
+action_value = 0
 power_value = 0
 
-# get date time object
-detail = datetime.datetime.now()
-date = detail.strftime("%Y%m%d%H%M%S")
-# open csv file
-file = open('./csv/'+ date +'.csv', 'a', newline='')
-csvWriter = csv.writer(file)
-data_items = ['count', 'latitude', 'longitude', 'yaw', 'cmd',
-                'pwm', 'voltage', 'current', 'power_consumption', 'kJ_poewr_consumption', 'accum_power_consumption', 'distance']
-csvWriter.writerow(data_items)
+# make a csv file only one time
+file_name = ''
+file_make = 0
+
+# define time variables
+st = time.perf_counter()
+ed = 0.0
 
 signal.signal(signal.SIGALRM, logging)
 signal.setitimer(signal.ITIMER_REAL, 0.01, interval)
@@ -109,35 +171,46 @@ signal.setitimer(signal.ITIMER_REAL, 0.01, interval)
 # main loop
 while True:
     try:
-        mode_value = int(input_mode())
-        if mode_value == 0 or mode_value == 1 or mode_value == 3:
+        mode_value = input_mode()
+        if mode_value == 0 or mode_value == 1 or mode_value == 3 or mode_value == 4:
             cmd = [0, 0]
-        if mode_value == 2:
-            cmd = [performance_value, power_value]
             i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
-            performance_value = int(input_performance_number())
-            if 1 <= performance_value <= 18:
-                power_value = int(input_power())
-            elif performance_value == 0:
+        if mode_value == 2:
+            if file_make == 0:
+                file_name, file = csv_file_make()
+                csvWriter = csv.writer(file)
+                file_make = 1
+            action_value = input_performance_number()
+            if 1 <= action_value <= 18:
+                power_value = input_power()
+            elif action_value == 0:
                 power_value = 0
-            cmd = [performance_value, power_value]
-        i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+            cmd = [action_value, power_value]
+            print(cmd)
+            i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
         if mode_value == 3:
             cmd = [0, 0]
-            for i in range(len(log_data)):
-                csvWriter.writerow(log_data[i])
-            file.close()
-            cmd = [0, 0]
             i2cbus.write_i2c_block_data(arduino, 0, cmd)
+            if os.path.isfile(file_name):
+                for i in range(len(log_data)):
+                    csvWriter.writerow(log_data[i])
+                file.close()
             time.sleep(1)
-        time.sleep(0.1)
+            break
+        if mode_value == 4:
+            action_value = input_performance_number()
+            if 1 <= action_value <= 18:
+                power_value1 = input_power()
+                power_value2 = input_power()
+            elif action_value == 0:
+                power_value = 0
+            time_count_control(action_value, power_value1, power_value2)
+            break
 
     except KeyboardInterrupt:
-        for i in range(len(log_data)):
-            csvWriter.writerow(log_data[i])
-        file.close()
         cmd = [0, 0]
         i2cbus.write_i2c_block_data(arduino, 0, cmd)
         time.sleep(1)
         signal.signal(signal.SIGALRM, kill_signal_process)
         signal.setitimer(signal.ITIMER_REAL, 0.1, 0.1)
+        break
