@@ -9,6 +9,7 @@ __pycache__/
 # ignore result data(csv, jpg) filess
 *.csv
 *.txt
+*.png
 
 # ignore arduino code
 arduino_code/
