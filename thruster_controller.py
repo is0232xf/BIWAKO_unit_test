@@ -120,6 +120,36 @@ def time_count_control(action, power1, power2):
             i2cbus.write_i2c_block_data(arduino, 0, cmd)
             break
 
+# the thruster is controled by given power to zero gradually
+def gradation_down(action, power):
+    duration = 1.0
+    diff = 0.0
+    mode_value = 2
+    cmd = [action, power]
+    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+    st = time.perf_counter()
+    ed = 0.0
+    while True:
+        try:
+            ed = time.perf_counter()
+            diff = ed - st
+            if diff > duration:
+                st = time.perf_counter()
+                ed = time.perf_counter()
+                power = power - 5
+                cmd = [action, power]
+                i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+                if power < 10.0:
+                    power = 0.0
+                    cmd = [action, power]
+                    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+                    break
+        except KeyboardInterrupt:
+            cmd = [0, 0]
+            i2cbus.write_i2c_block_data(arduino, 0, cmd)
+            break
+
+
 # get date time object
 def csv_file_make():
     detail = datetime.datetime.now()
