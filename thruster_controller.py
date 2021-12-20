@@ -126,7 +126,7 @@ def time_count_control(action, power1, power2):
             break
 
 # the thruster is controled by given power to zero gradually
-def gradation_down(action, power):
+def gradation_control(action, power):
     duration = 1.0
     diff = 0.0
     mode_value = 2
@@ -241,6 +241,15 @@ while True:
                 power_value = 0
             time_count_control(action_value, power_value1, power_value2)
             break
+        if mode_value == 5:
+            action_value = input_performance_number()
+            if 1 <= action_value <= 18:
+                power_value = input_power()
+            elif action_value == 0:
+                power_value = 0
+            gradation_control(action_value, power_value)
+            break
+
 
     except KeyboardInterrupt:
         cmd = [0, 0]
