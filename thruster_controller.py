@@ -24,9 +24,9 @@ interval = 1/frequency # [s]
 def input_mode():
     while True:
         print("Please select a control mode")
-        print("0: RC mode, 1: Auto mode, 2: Manual mode, 3: END, 4: Time")
+        print("0: RC mode, 1: Auto mode, 2: Manual mode, 3: END, 4: Time, 5: Gradation")
         input_value = int(input())
-        if input_value < 0 or input_value > 4:
+        if input_value < 0 or input_value > 5:
             print("Invalid value. Input again")
         else:
             return input_value
@@ -35,14 +35,19 @@ def input_mode():
 def input_performance_number():
     while True:
         print("Please input robot performance number")
+        print("=================================================================")
         print("4 thrusters drive mode")
         print("0:Stop, 1: Positive, 2: Negative, 3: Left, 4: Right, 5:CW, 6: CCW")
+        print("=================================================================")
         print("Diagonal drive mode")
         print("7: First quadrant, 8: Second quadrant, 9: Third quadrant, 10: Forth quadrant")
+        print("=================================================================")
         print("2 thrusters drive mode (Push)")
         print("11: Positive, 12: Negative, 13: Left, 14: Right")
+        print("=================================================================")
         print("2 thrusters drive mode (Pull)")
         print("15: Positive, 16: Negative, 17: Left, 18: Right")
+        print("=================================================================")
         input_value = int(input("Command: "))
         if input_value < 0 or input_value > 18:
             print("Invalid number. Input again")
@@ -119,6 +124,40 @@ def time_count_control(action, power1, power2):
             cmd = [0, 0]
             i2cbus.write_i2c_block_data(arduino, 0, cmd)
             break
+
+# the thruster is controled by given power to zero gradually
+def gradation_control(action, power):
+    duration = 1.0
+    diff = 0.0
+    mode_value = 2
+    st = time.perf_counter()
+    ed = 0.0
+    cmd = [0, 0]
+    i2cbus.write_i2c_block_data(arduino, 0, cmd)
+    time.sleep(1)
+    cmd = [action, power]
+    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+    while True:
+        try:
+            ed = time.perf_counter()
+            diff = ed - st
+            if diff > duration:
+                st = time.perf_counter()
+                ed = time.perf_counter()
+                power = power - 5
+                cmd = [action, power]
+                i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+                if power < 10.0:
+                    power = 0
+                    cmd = [action, power]
+                    i2cbus.write_i2c_block_data(arduino, 0, cmd)
+                    csv_file_write()
+                    break
+        except KeyboardInterrupt:
+            cmd = [0, 0]
+            i2cbus.write_i2c_block_data(arduino, 0, cmd)
+            break
+
 
 # get date time object
 def csv_file_make():
@@ -206,6 +245,15 @@ while True:
                 power_value = 0
             time_count_control(action_value, power_value1, power_value2)
             break
+        if mode_value == 5:
+            action_value = input_performance_number()
+            if 1 <= action_value <= 18:
+                power_value = input_power()
+            elif action_value == 0:
+                power_value = 0
+            gradation_control(action_value, power_value)
+            break
+
 
     except KeyboardInterrupt:
         cmd = [0, 0]
