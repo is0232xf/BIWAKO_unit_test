@@ -148,9 +148,10 @@ def gradation_control(action, power):
                 cmd = [action, power]
                 i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
                 if power < 10.0:
-                    power = 0.0
+                    power = 0
                     cmd = [action, power]
-                    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
+                    i2cbus.write_i2c_block_data(arduino, 0, cmd)
+                    csv_file_write()
                     break
         except KeyboardInterrupt:
             cmd = [0, 0]
