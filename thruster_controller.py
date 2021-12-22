@@ -130,10 +130,13 @@ def gradation_control(action, power):
     duration = 1.0
     diff = 0.0
     mode_value = 2
-    cmd = [action, power]
-    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
     st = time.perf_counter()
     ed = 0.0
+    cmd = [0, 0]
+    i2cbus.write_i2c_block_data(arduino, 0, cmd)
+    time.sleep(1)
+    cmd = [action, power]
+    i2cbus.write_i2c_block_data(arduino, mode_value, cmd)
     while True:
         try:
             ed = time.perf_counter()
