@@ -7,8 +7,8 @@ def return_2d_approx(x, y):
     return res, y2
 
 # raw data
-x = np.array([0.0, 1.0, 2.0, 2.5, 3.0])
-y = np.array([0.085, 0.14, 0.29, 0.45, 0.67])
+x = np.array([0.0, 0.1, 0.2, 0.25, 0.3])
+y = np.array([0.085, 0.18, 0.42, 0.73, 1.15])
 
 # square polyfit
 res2=np.polyfit(x, y, 2)
