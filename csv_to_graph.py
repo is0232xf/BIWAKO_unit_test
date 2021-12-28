@@ -75,6 +75,28 @@ def make_result_file(path):
     mean_const = round(mean(mean_const_value),2)
     f.write("Mean peak value: %s, Mean const value: %s\n" % (mean_peak, mean_const))
     f.close()
+
+# analyze the step down experiment data
+def analyze_gradation_exp(file_list):
+    # import csv format file
+    for file in file_list:
+        data = pd.read_csv(file, index_col=0, skipinitialspace=True)
+        # comvert csv data to a list format data
+        current = np.array(data['current'].values.tolist())
+        # extract the peak value from the list data
+        peak_value_index = np.argmax(current)
+        start_index = peak_value_index
+        # clip the time series data by 1 sec
+        grad_data = []
+        for i in range(int(len(current[start_index:])/99)):
+            grad_data.append(current[start_index:start_index+99*i])
+            start_index = start_index + 99
+        # calcurate mean value of each data set
+        for data in grad_data:
+            mean_grad = mean(data)
+            print(mean_grad)
+        # write results on a text file
+
 if __name__ == "__main__":
     # import csv format file
     """
